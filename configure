@@ -1,0 +1,6 @@
+mkdir -p build
+cp CMakeLists.txt $1 build
+
+cd build
+mv $1 map.txt
+cmake .
