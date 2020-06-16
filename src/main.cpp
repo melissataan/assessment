@@ -5,6 +5,10 @@
 #include "../hdr/InputParser.hpp"
 #include "../hdr/SkiNode.hpp"
 
+
+int setNodes(const KeyDimension& border, const KeyDimension& currentPoint,
+              const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix);
+
 void printInput(const std::vector<std::vector<int>>& input)
 {
     LOG(("INPUT\n"));
@@ -17,89 +21,140 @@ void printInput(const std::vector<std::vector<int>>& input)
     LOG(("\n"));
 }
 
-void setNodes(const KeyDimension& border, const KeyDimension& currentPoint,
-              std::map<KeyDimension, SkiNode>& keyCollection, SkiNode& ski)
+int getPathLength(const KeyDimension& border, int currentSki, const int& childNode, int& lengthValue, KeyDimension point,
+    const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix)
+{
+    int pathLength = 0;
+
+    if (childNode < currentSki)
+    {
+        if (lengthValue != 0)
+        {
+            pathLength = lengthValue + 1;
+        }
+        else
+        {
+            pathLength = setNodes(border, point, input, lengthMatrix) + 1;
+        }
+    }
+
+    return pathLength;
+}
+
+int setNodes(const KeyDimension& border, const KeyDimension& currentPoint,
+              const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix)
 {
     KeyDimension northPoint(currentPoint.row - 1, currentPoint.col);
     KeyDimension eastPoint(currentPoint.row, currentPoint.col + 1);
     KeyDimension southPoint(currentPoint.row + 1, currentPoint.col);
     KeyDimension westPoint(currentPoint.row, currentPoint.col - 1);
 
-    auto& currentSki = keyCollection[currentPoint];
+    int northPathLength = 0;
+    int eastPathLength = 0;
+    int southPathLength = 0;
+    int westPathLength = 0;
+
+    auto& currentSki = input[currentPoint.row][currentPoint.col];
 
     if (northPoint.row >= 0)
     {
-        // add node child
-        // TODO: constraint that checks if child data is less than current node data before addChild
-        ski.addChild(keyCollection[northPoint]);
+        auto& childNode = input[northPoint.row][northPoint.col];
+        auto& lengthValue = lengthMatrix[northPoint.row][northPoint.col];
+        northPathLength = getPathLength(border, currentSki, childNode, lengthValue, northPoint, input, lengthMatrix);
     }
 
     if (eastPoint.col < border.col)
     {
-        // add node child
-        // TODO: constraint that checks if child data is less than current node data before addChild
-        ski.addChild(keyCollection[eastPoint]);
+        auto& childNode = input[eastPoint.row][eastPoint.col];
+        auto& lengthValue = lengthMatrix[eastPoint.row][eastPoint.col];
+        eastPathLength = getPathLength(border, currentSki, childNode, lengthValue, eastPoint, input, lengthMatrix);
     }
 
     if (southPoint.row < border.row)
     {
-        // add node child
-        // TODO: constraint that checks if child data is less than current node data before addChild
-        ski.addChild(keyCollection[southPoint]);
+        auto& childNode = input[southPoint.row][southPoint.col];
+        auto& lengthValue = lengthMatrix[southPoint.row][southPoint.col];
+        southPathLength = getPathLength(border, currentSki, childNode, lengthValue, southPoint, input, lengthMatrix);
     }
 
     if (westPoint.col >= 0)
     {
-        // add node child
-        // TODO: constraint that checks if child data is less than current node data before addChild
-        ski.addChild(keyCollection[westPoint]);
+        auto& childNode = input[westPoint.row][westPoint.col];
+        auto& lengthValue = lengthMatrix[westPoint.row][westPoint.col];
+        westPathLength = getPathLength(border, currentSki, childNode, lengthValue, westPoint, input, lengthMatrix);
+        /*if (childNode < currentSki)
+        {
+            if (lengthValue != 0)
+            {
+                westPathLength = lengthValue + 1;
+            }
+            else
+            {
+
+            }
+        }*/
     }
+
+    int maxLength = std::max(std::max(northPathLength, southPathLength), std::max(eastPathLength, westPathLength));
+
+    lengthMatrix[currentPoint.row][currentPoint.col] = maxLength;
+
+    return maxLength;
 }
 
 std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
 {
-    std::vector<int> result;
-
-    std::map<KeyDimension, SkiNode> keyCollection;
-
     int rowLength = input[0][0];
     int colLength = input[0][1];
-
     KeyDimension skiDimension(rowLength, colLength);
 
     std::vector<std::vector<int>> inputCopy(input.begin() + 1, input.end());
 
-    // print input data
+    std::vector<int> columnValues(inputCopy[0].size(), 0);
+    std::vector<std::vector<int>> lengthMatrix(inputCopy.size(), columnValues);
+
+    // print input
     printInput(inputCopy);
 
+    int maxLength = 0;
+    std::vector<KeyDimension> nodes;
 
-    // populate keyCollection
-    for (auto row = 0; row < rowLength; ++row)
+    for (auto row = 0; row < inputCopy.size(); ++row)
     {
-        for (auto col = 0; col < colLength; ++col)
+        for (auto col = 0; col < inputCopy[0].size(); ++col)
         {
-            KeyDimension key(row,col);
-            SkiNode skihead(key, inputCopy[row][col]);
-            keyCollection.insert(std::pair<KeyDimension, SkiNode>(key, skihead));
-
-            LOG(("Row[%u] Col[%u]: Value[%u]\n", keyCollection[key].getPoint().row,
-                    keyCollection[key].getPoint().col, keyCollection[key].getData()));
+            KeyDimension currentPoint(row, col);
+            int tail = 0;
+            int currentNodeLength = setNodes(skiDimension, currentPoint, inputCopy, lengthMatrix);
+            if (maxLength < currentNodeLength)
+            {
+                maxLength = currentNodeLength;
+                nodes.clear();
+                nodes.push_back(currentPoint);
+            }
+            else if (maxLength == currentNodeLength)
+            {
+                nodes.push_back(currentPoint);
+            }
         }
-        LOG(("========================================================================\n\n"));
     }
 
-    // Print row, col, and value of items in key collection
-    for (auto& i : keyCollection)
+    for (auto i : nodes)
     {
-        setNodes(skiDimension, i.first, keyCollection, i.second);
-        LOG(("Row[%u] Col[%u]: Value[%u] isChildEmpty[%u] pointer[%p]\n\n",
-            i.first.row,
-            i.first.col,
-            i.second.getData(),
-            i.second.getNumOfChild(), &(i.second)));
+        LOG(("HEAD NODES: ROW[%u] COL[%u]\n", i.row, i.col, i));
     }
 
-    return result;
+    LOG(("LOGGGG\n"));
+    for (auto i : lengthMatrix)
+    {
+        for (auto j : i)
+            LOG(("%u ", j));
+        LOG(("\n"));
+    }
+    LOG(("\n"));
+    LOG(("LOGGGG\n"));
+
+    return input[0];
 }
 
 int main()
@@ -110,13 +165,13 @@ int main()
 
     if (vectorInput.size() == 0 || vectorInput[0].size() < 2)
     {
-        LOG(("Incorrect input."));
+        // LOG(("Incorrect input."));
     }
 
     rowSize = vectorInput[0][0];
     colSize = vectorInput[0][1];
 
-    LOG(("Dimension is : %ux%u\n", rowSize, colSize));
+    // LOG(("Dimension is : %ux%u\n", rowSize, colSize));
     KeyDimension skiDimension(rowSize, colSize);
 
     findLongestSki(vectorInput);
