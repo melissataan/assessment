@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "../hdr/InputParser.hpp"
-#include "../hdr/SkiNode.hpp"
+#include "../hdr/KeyDimensions.hpp"
 
 struct NodeCtx
 {
@@ -27,6 +27,35 @@ struct NodeCtx
 NodeCtx findNodePath(const KeyDimension& border,
                      const KeyDimension& currentNode,
                      const std::vector<std::vector<int>>& inputList,
+                     std::vector<std::vector<NodeCtx>>& pathList);
+
+void processNeighborNode(const KeyDimension& border,
+                         const KeyDimension& neighborNode,
+                         NodeCtx& neighborNodeCtx,
+                         const std::vector<std::vector<int>>& inputList,
+                         std::vector<std::vector<NodeCtx>>& pathList,
+                         int currentNodeValue,
+                         bool& isNoNeighborExist)
+{
+    int neighborValue = inputList[neighborNode.row][neighborNode.col];
+    if (neighborValue < currentNodeValue)
+    {
+        isNoNeighborExist = false;
+        if (!pathList[neighborNode.row][neighborNode.col].isChecked)
+        {
+            neighborNodeCtx = findNodePath(border, neighborNode, inputList, pathList);
+        }
+        else
+        {
+            neighborNodeCtx = pathList[neighborNode.row][neighborNode.col];
+        }
+        neighborNodeCtx.pathLength += 1;
+    }
+}
+
+NodeCtx findNodePath(const KeyDimension& border,
+                     const KeyDimension& currentNode,
+                     const std::vector<std::vector<int>>& inputList,
                      std::vector<std::vector<NodeCtx>>& pathList)
 {
     KeyDimension northNode(currentNode.row - 1, currentNode.col);
@@ -39,89 +68,87 @@ NodeCtx findNodePath(const KeyDimension& border,
     NodeCtx westNodeCtx;
 
     bool isNoNeighborExist = true;
-    NodeCtx& currentNodeCtx = pathList[currentNode.row][currentNode.col];
+
     int currentNodeValue = inputList[currentNode.row][currentNode.col];
+
+    NodeCtx& currentNodeCtx = pathList[currentNode.row][currentNode.col];
     currentNodeCtx.vectorPath.push_back(currentNodeValue);
     currentNodeCtx.isChecked = true;
 
     if (northNode.row >= 0)
     {
-        int neighborValue = inputList[northNode.row][northNode.col];
-        if (neighborValue < currentNodeValue)
-        {
-            isNoNeighborExist = false;
-            if (!pathList[northNode.row][northNode.col].isChecked)
-            {
-                northNodeCtx = findNodePath(border, northNode, inputList, pathList);
-            }
-            else
-            {
-                northNodeCtx = pathList[northNode.row][northNode.col];
-            }
-            northNodeCtx.pathLength += 1;
-
-            LOG(("NORTH\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, northNodeCtx.tail));
-        }
+        processNeighborNode(border, northNode, northNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
+        // int neighborValue = inputList[northNode.row][northNode.col];
+        // if (neighborValue < currentNodeValue)
+        // {
+        //     isNoNeighborExist = false;
+        //     if (!pathList[northNode.row][northNode.col].isChecked)
+        //     {
+        //         northNodeCtx = findNodePath(border, northNode, inputList, pathList);
+        //     }
+        //     else
+        //     {
+        //         northNodeCtx = pathList[northNode.row][northNode.col];
+        //     }
+        //     northNodeCtx.pathLength += 1;
+        // }
     }
 
     if (eastNode.col < border.col)
     {
-        int neighborValue = inputList[eastNode.row][eastNode.col];
-        if (neighborValue < currentNodeValue)
-        {
-            isNoNeighborExist = false;
-            if (!pathList[eastNode.row][eastNode.col].isChecked)
-            {
-                eastNodeCtx = findNodePath(border, eastNode, inputList, pathList);
-            }
-            else
-            {
-                eastNodeCtx = pathList[eastNode.row][eastNode.col];
-            }
-            eastNodeCtx.pathLength += 1;
-
-            LOG(("EAST\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, eastNodeCtx.tail));
-        }
+        processNeighborNode(border, eastNode, eastNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
+        // int neighborValue = inputList[eastNode.row][eastNode.col];
+        // if (neighborValue < currentNodeValue)
+        // {
+        //     isNoNeighborExist = false;
+        //     if (!pathList[eastNode.row][eastNode.col].isChecked)
+        //     {
+        //         eastNodeCtx = findNodePath(border, eastNode, inputList, pathList);
+        //     }
+        //     else
+        //     {
+        //         eastNodeCtx = pathList[eastNode.row][eastNode.col];
+        //     }
+        //     eastNodeCtx.pathLength += 1;
+        // }
     }
 
     if (southNode.row < border.row)
     {
-        int neighborValue = inputList[southNode.row][southNode.col];
-        if (neighborValue < currentNodeValue)
-        {
-            isNoNeighborExist = false;
-            if (!pathList[southNode.row][southNode.col].isChecked)
-            {
-                southNodeCtx = findNodePath(border, southNode, inputList, pathList);
-            }
-            else
-            {
-                southNodeCtx = pathList[southNode.row][southNode.col];
-            }
-            southNodeCtx.pathLength += 1;
-
-            LOG(("SOUTH\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, southNodeCtx.tail));
-        }
+        processNeighborNode(border, southNode, southNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
+        // int neighborValue = inputList[southNode.row][southNode.col];
+        // if (neighborValue < currentNodeValue)
+        // {
+        //     isNoNeighborExist = false;
+        //     if (!pathList[southNode.row][southNode.col].isChecked)
+        //     {
+        //         southNodeCtx = findNodePath(border, southNode, inputList, pathList);
+        //     }
+        //     else
+        //     {
+        //         southNodeCtx = pathList[southNode.row][southNode.col];
+        //     }
+        //     southNodeCtx.pathLength += 1;
+        // }
     }
 
     if (westNode.col >= 0)
     {
-        int neighborValue = inputList[westNode.row][westNode.col];
-        if (neighborValue < currentNodeValue)
-        {
-            isNoNeighborExist = false;
-            if (!pathList[westNode.row][westNode.col].isChecked)
-            {
-                westNodeCtx = findNodePath(border, westNode, inputList, pathList);
-            }
-            else
-            {
-                westNodeCtx = pathList[westNode.row][westNode.col];
-            }
-            westNodeCtx.pathLength += 1;
-
-            LOG(("WEST\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, westNodeCtx.tail));
-        }
+        processNeighborNode(border, westNode, westNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
+        // int neighborValue = inputList[westNode.row][westNode.col];
+        // if (neighborValue < currentNodeValue)
+        // {
+        //     isNoNeighborExist = false;
+        //     if (!pathList[westNode.row][westNode.col].isChecked)
+        //     {
+        //         westNodeCtx = findNodePath(border, westNode, inputList, pathList);
+        //     }
+        //     else
+        //     {
+        //         westNodeCtx = pathList[westNode.row][westNode.col];
+        //     }
+        //     westNodeCtx.pathLength += 1;
+        // }
     }
 
     if (isNoNeighborExist)
@@ -129,8 +156,6 @@ NodeCtx findNodePath(const KeyDimension& border,
         currentNodeCtx.data = currentNodeValue;
         currentNodeCtx.tail = currentNodeValue;
         currentNodeCtx.pathLength = 0;
-        LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
-
         NodeCtx returnNode = currentNodeCtx;
         return returnNode;
     }
@@ -159,48 +184,79 @@ NodeCtx findNodePath(const KeyDimension& border,
 
         int min_tail = *(std::min_element(tails.begin(), tails.end()));
 
+        std::function<void(NodeCtx&)> storeContext = [&currentNodeCtx, &currentNodeValue](NodeCtx& neighborNodeCtx)
+                                             {
+                                                currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(),
+                                                                                 neighborNodeCtx.vectorPath.begin(),
+                                                                                 neighborNodeCtx.vectorPath.end());
+                                                currentNodeCtx.tail = neighborNodeCtx.tail;
+                                                currentNodeCtx.data = currentNodeValue;
+                                                currentNodeCtx.pathLength = neighborNodeCtx.pathLength;
+                                             };
+
         if (min_tail == northNodeCtx.tail && maxLength == northNodeCtx.pathLength)
         {
-            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), northNodeCtx.vectorPath.begin(), northNodeCtx.vectorPath.end());
-            currentNodeCtx.tail = northNodeCtx.tail;
-            currentNodeCtx.data = currentNodeValue;
-            currentNodeCtx.pathLength = northNodeCtx.pathLength;
-            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+            storeContext(northNodeCtx);
+            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), northNodeCtx.vectorPath.begin(), northNodeCtx.vectorPath.end());
+            // currentNodeCtx.tail = northNodeCtx.tail;
+            // currentNodeCtx.data = currentNodeValue;
+            // currentNodeCtx.pathLength = northNodeCtx.pathLength;
         }
         else if (min_tail == eastNodeCtx.tail && maxLength == eastNodeCtx.pathLength)
         {
-            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), eastNodeCtx.vectorPath.begin(), eastNodeCtx.vectorPath.end());
-            currentNodeCtx.tail = eastNodeCtx.tail;
-            currentNodeCtx.data = currentNodeValue;
-            currentNodeCtx.pathLength = eastNodeCtx.pathLength;
-            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+            storeContext(eastNodeCtx);
+            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), eastNodeCtx.vectorPath.begin(), eastNodeCtx.vectorPath.end());
+            // currentNodeCtx.tail = eastNodeCtx.tail;
+            // currentNodeCtx.data = currentNodeValue;
+            // currentNodeCtx.pathLength = eastNodeCtx.pathLength;
         }
         else if (min_tail == southNodeCtx.tail && maxLength == southNodeCtx.pathLength)
         {
-            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), southNodeCtx.vectorPath.begin(), southNodeCtx.vectorPath.end());
-            currentNodeCtx.tail = southNodeCtx.tail;
-            currentNodeCtx.data = currentNodeValue;
-            currentNodeCtx.pathLength = southNodeCtx.pathLength;
-            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+            storeContext(southNodeCtx);
+            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), southNodeCtx.vectorPath.begin(), southNodeCtx.vectorPath.end());
+            // currentNodeCtx.tail = southNodeCtx.tail;
+            // currentNodeCtx.data = currentNodeValue;
+            // currentNodeCtx.pathLength = southNodeCtx.pathLength;
         }
         else if (min_tail == westNodeCtx.tail && maxLength == westNodeCtx.pathLength)
         {
-            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), westNodeCtx.vectorPath.begin(), westNodeCtx.vectorPath.end());
-            currentNodeCtx.tail = westNodeCtx.tail;
-            currentNodeCtx.data = currentNodeValue;
-            currentNodeCtx.pathLength = westNodeCtx.pathLength;
-            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+            storeContext(westNodeCtx);
+            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), westNodeCtx.vectorPath.begin(), westNodeCtx.vectorPath.end());
+            // currentNodeCtx.tail = westNodeCtx.tail;
+            // currentNodeCtx.data = currentNodeValue;
+            // currentNodeCtx.pathLength = westNodeCtx.pathLength;
         }
     }
 
-    LOG(("PRINTING PATHS\n"));
-    for (auto i : currentNodeCtx.vectorPath)
+    return currentNodeCtx;
+}
+
+std::vector<int> findLongestNodePath(const std::vector<NodeCtx>& nodes)
+{
+    if (nodes.size() == 0) return std::vector<int>();
+
+    int dropValue = nodes[0].data - nodes[0].tail;
+    auto longestSkiNode = nodes[0].vectorPath;
+    for (auto node : nodes)
+    {
+        int tmpDropValue = node.data - node.tail;
+        if (tmpDropValue > dropValue)
+        {
+            longestSkiNode = node.vectorPath;
+            dropValue = tmpDropValue;
+        }
+    }
+
+    LOG(("LONGEST PATH IS: \n"));
+    for (auto i : longestSkiNode)
     {
         LOG(("%u ", i));
     }
     LOG(("\n"));
-    LOG(("LOGGGG\n"));
-    return currentNodeCtx;
+
+    LOG(("DROP: %u\n", dropValue));
+    LOG(("LENGTH: %u\n", (int)(longestSkiNode.size())));
+    return longestSkiNode;
 }
 
 std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
@@ -227,8 +283,6 @@ std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
             {
                 NodeCtx currentNodeCtx = findNodePath(skiDimension, currentNode, skiMatrix, pathCtxList);
                 int currentNodeLength = currentNodeCtx.pathLength;
-                LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
-
                 if (maxLength < currentNodeLength)
                 {
                     maxLength = currentNodeLength;
@@ -244,47 +298,7 @@ std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
     }
 
 
-    for (auto i : nodes)
-    {
-        LOG(("HEAD NODES: DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", i.data, i.pathLength, i.tail));
-        for (auto elem : i.vectorPath)
-        {
-            // Do something
-            LOG(("%u ", elem));
-
-        }
-        LOG(("\n"));
-    }
-
-    LOG(("LOGGGG\n"));
-    for (auto i : pathCtxList)
-    {
-        for (auto j : i)
-            LOG(("%u ", j.pathLength));
-        LOG(("\n"));
-    }
-    LOG(("\n"));
-    LOG(("LOGGGG\n"));
-
-    LOG(("LAST PART__\n"));
-    int longestPath = nodes[0].data - nodes[0].tail;
-    auto longestSkiNode = nodes[0].vectorPath;
-    for (auto node : nodes)
-    {
-        int tmpPathLength = node.data - node.tail;
-        if (tmpPathLength > longestPath)
-        {
-            longestSkiNode = node.vectorPath;
-            longestPath = tmpPathLength;
-        }
-    }
-
-    LOG(("LONGEST PATH IS: \n"));
-    for (auto i : longestSkiNode)
-    {
-        LOG(("%u ", i));
-    }
-    LOG(("\n"));
+    auto longestSkiNode = findLongestNodePath(nodes);
 
     return longestSkiNode;
 }
@@ -297,16 +311,15 @@ int main()
 
     if (vectorInput.size() == 0 || vectorInput[0].size() < 2)
     {
-        // LOG(("Incorrect input."));
+        LOG(("Incorrect input."));
     }
 
     rowSize = vectorInput[0][0];
     colSize = vectorInput[0][1];
 
-    // LOG(("Dimension is : %ux%u\n", rowSize, colSize));
     KeyDimension skiDimension(rowSize, colSize);
 
-    findLongestSki(vectorInput);
+    auto result = findLongestSki(vectorInput);
 
     return 0;
 }
