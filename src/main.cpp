@@ -5,101 +5,200 @@
 #include "../hdr/InputParser.hpp"
 #include "../hdr/SkiNode.hpp"
 
-
-int setNodes(const KeyDimension& border, const KeyDimension& currentPoint,
-              const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix);
-
-void printInput(const std::vector<std::vector<int>>& input)
+struct NodeCtx
 {
-    LOG(("INPUT\n"));
-    for (auto i : input)
-    {
-        for (auto j : i)
-            LOG(("%u ", j));
-        LOG(("\n"));
-    }
-    LOG(("\n"));
-}
-
-int getPathLength(const KeyDimension& border, int currentSki, const int& childNode, int& lengthValue, KeyDimension point,
-    const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix)
-{
+    int data = 0;
     int pathLength = 0;
+    int tail = 0;
+    std::vector<int> vectorPath;
 
-    if (childNode < currentSki)
+    NodeCtx& operator=(NodeCtx node)
     {
-        if (lengthValue != 0)
-        {
-            pathLength = lengthValue + 1;
-        }
-        else
-        {
-            pathLength = setNodes(border, point, input, lengthMatrix) + 1;
-        }
+        data = node.data;
+        pathLength = node.pathLength;
+        tail = node.tail;
+        vectorPath = node.vectorPath;
+
+        return *this;
     }
+};
 
-    return pathLength;
-}
-
-int setNodes(const KeyDimension& border, const KeyDimension& currentPoint,
-              const std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& lengthMatrix)
+NodeCtx findNodePath(const KeyDimension& border,
+                     const KeyDimension& currentNode,
+                     const std::vector<std::vector<int>>& inputList,
+                     std::vector<std::vector<NodeCtx>>& pathList)
 {
-    KeyDimension northPoint(currentPoint.row - 1, currentPoint.col);
-    KeyDimension eastPoint(currentPoint.row, currentPoint.col + 1);
-    KeyDimension southPoint(currentPoint.row + 1, currentPoint.col);
-    KeyDimension westPoint(currentPoint.row, currentPoint.col - 1);
+    KeyDimension northNode(currentNode.row - 1, currentNode.col);
+    KeyDimension eastNode(currentNode.row, currentNode.col + 1);
+    KeyDimension southNode(currentNode.row + 1, currentNode.col);
+    KeyDimension westNode(currentNode.row, currentNode.col - 1);
+    NodeCtx northNodeCtx;
+    NodeCtx eastNodeCtx;
+    NodeCtx southNodeCtx;
+    NodeCtx westNodeCtx;
 
-    int northPathLength = 0;
-    int eastPathLength = 0;
-    int southPathLength = 0;
-    int westPathLength = 0;
+    bool isNoNeighborExist = true;
+    NodeCtx& currentNodeCtx = pathList[currentNode.row][currentNode.col];
+    int currentNodeValue = inputList[currentNode.row][currentNode.col];
+    currentNodeCtx.vectorPath.push_back(currentNodeValue);
 
-    auto& currentSki = input[currentPoint.row][currentPoint.col];
-
-    if (northPoint.row >= 0)
+    if (northNode.row >= 0)
     {
-        auto& childNode = input[northPoint.row][northPoint.col];
-        auto& lengthValue = lengthMatrix[northPoint.row][northPoint.col];
-        northPathLength = getPathLength(border, currentSki, childNode, lengthValue, northPoint, input, lengthMatrix);
-    }
-
-    if (eastPoint.col < border.col)
-    {
-        auto& childNode = input[eastPoint.row][eastPoint.col];
-        auto& lengthValue = lengthMatrix[eastPoint.row][eastPoint.col];
-        eastPathLength = getPathLength(border, currentSki, childNode, lengthValue, eastPoint, input, lengthMatrix);
-    }
-
-    if (southPoint.row < border.row)
-    {
-        auto& childNode = input[southPoint.row][southPoint.col];
-        auto& lengthValue = lengthMatrix[southPoint.row][southPoint.col];
-        southPathLength = getPathLength(border, currentSki, childNode, lengthValue, southPoint, input, lengthMatrix);
-    }
-
-    if (westPoint.col >= 0)
-    {
-        auto& childNode = input[westPoint.row][westPoint.col];
-        auto& lengthValue = lengthMatrix[westPoint.row][westPoint.col];
-        westPathLength = getPathLength(border, currentSki, childNode, lengthValue, westPoint, input, lengthMatrix);
-        /*if (childNode < currentSki)
+        int neighborValue = inputList[northNode.row][northNode.col];
+        if (neighborValue < currentNodeValue)
         {
-            if (lengthValue != 0)
+            isNoNeighborExist = false;
+            if (pathList[northNode.row][northNode.col].pathLength == 0)
             {
-                westPathLength = lengthValue + 1;
+                northNodeCtx = findNodePath(border, northNode, inputList, pathList);
             }
             else
             {
-
+                northNodeCtx = pathList[northNode.row][northNode.col];
             }
-        }*/
+            northNodeCtx.pathLength += 1;
+
+            LOG(("NORTH\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, northNodeCtx.tail));
+        }
     }
 
-    int maxLength = std::max(std::max(northPathLength, southPathLength), std::max(eastPathLength, westPathLength));
+    if (eastNode.col < border.col)
+    {
+        int neighborValue = inputList[eastNode.row][eastNode.col];
+        if (neighborValue < currentNodeValue)
+        {
+            isNoNeighborExist = false;
+            if (pathList[eastNode.row][eastNode.col].pathLength == 0)
+            {
+                eastNodeCtx = findNodePath(border, eastNode, inputList, pathList);
+            }
+            else
+            {
+                eastNodeCtx = pathList[eastNode.row][eastNode.col];
+            }
+            eastNodeCtx.pathLength += 1;
 
-    lengthMatrix[currentPoint.row][currentPoint.col] = maxLength;
+            LOG(("EAST\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, eastNodeCtx.tail));
+        }
+    }
 
-    return maxLength;
+    if (southNode.row < border.row)
+    {
+        int neighborValue = inputList[southNode.row][southNode.col];
+        if (neighborValue < currentNodeValue)
+        {
+            isNoNeighborExist = false;
+            if (pathList[southNode.row][southNode.col].pathLength == 0)
+            {
+                southNodeCtx = findNodePath(border, southNode, inputList, pathList);
+            }
+            else
+            {
+                southNodeCtx = pathList[southNode.row][southNode.col];
+            }
+            southNodeCtx.pathLength += 1;
+
+            LOG(("SOUTH\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, southNodeCtx.tail));
+        }
+    }
+
+    if (westNode.col >= 0)
+    {
+        int neighborValue = inputList[westNode.row][westNode.col];
+        if (neighborValue < currentNodeValue)
+        {
+            isNoNeighborExist = false;
+            if (pathList[westNode.row][westNode.col].pathLength == 0)
+            {
+                westNodeCtx = findNodePath(border, westNode, inputList, pathList);
+            }
+            else
+            {
+                westNodeCtx = pathList[westNode.row][westNode.col];
+            }
+            westNodeCtx.pathLength += 1;
+
+            LOG(("WEST\t\tLINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, westNodeCtx.tail));
+        }
+    }
+
+    if (isNoNeighborExist)
+    {
+        currentNodeCtx.data = currentNodeValue;
+        currentNodeCtx.tail = currentNodeValue;
+        currentNodeCtx.pathLength = 0;
+        LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+
+        NodeCtx returnNode = currentNodeCtx;
+        return returnNode;
+    }
+    else
+    {
+        int maxLength = std::max(std::max(northNodeCtx.pathLength, southNodeCtx.pathLength),
+                                 std::max(eastNodeCtx.pathLength, westNodeCtx.pathLength));
+
+        std::vector<int> tails;
+        if (maxLength == northNodeCtx.pathLength)
+        {
+            tails.push_back(northNodeCtx.tail);
+        }
+        if (maxLength == eastNodeCtx.pathLength)
+        {
+            tails.push_back(eastNodeCtx.tail);
+        }
+        if (maxLength == southNodeCtx.pathLength)
+        {
+            tails.push_back(southNodeCtx.tail);
+        }
+        if (maxLength == westNodeCtx.pathLength)
+        {
+            tails.push_back(westNodeCtx.tail);
+        }
+
+        int min_tail = *(std::min_element(tails.begin(), tails.end()));
+
+        if (min_tail == northNodeCtx.tail && maxLength == northNodeCtx.pathLength)
+        {
+            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), northNodeCtx.vectorPath.begin(), northNodeCtx.vectorPath.end());
+            currentNodeCtx.tail = northNodeCtx.tail;
+            currentNodeCtx.data = currentNodeValue;
+            currentNodeCtx.pathLength = northNodeCtx.pathLength;
+            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+        }
+        else if (min_tail == eastNodeCtx.tail && maxLength == eastNodeCtx.pathLength)
+        {
+            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), eastNodeCtx.vectorPath.begin(), eastNodeCtx.vectorPath.end());
+            currentNodeCtx.tail = eastNodeCtx.tail;
+            currentNodeCtx.data = currentNodeValue;
+            currentNodeCtx.pathLength = eastNodeCtx.pathLength;
+            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+        }
+        else if (min_tail == southNodeCtx.tail && maxLength == southNodeCtx.pathLength)
+        {
+            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), southNodeCtx.vectorPath.begin(), southNodeCtx.vectorPath.end());
+            currentNodeCtx.tail = southNodeCtx.tail;
+            currentNodeCtx.data = currentNodeValue;
+            currentNodeCtx.pathLength = southNodeCtx.pathLength;
+            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+        }
+        else if (min_tail == westNodeCtx.tail && maxLength == westNodeCtx.pathLength)
+        {
+            currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), westNodeCtx.vectorPath.begin(), westNodeCtx.vectorPath.end());
+            currentNodeCtx.tail = westNodeCtx.tail;
+            currentNodeCtx.data = currentNodeValue;
+            currentNodeCtx.pathLength = westNodeCtx.pathLength;
+            LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+        }
+    }
+
+    LOG(("PRINTING PATHS\n"));
+    for (auto i : currentNodeCtx.vectorPath)
+    {
+        LOG(("%u ", i));
+    }
+    LOG(("\n"));
+    LOG(("LOGGGG\n"));
+    return currentNodeCtx;
 }
 
 std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
@@ -108,51 +207,70 @@ std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
     int colLength = input[0][1];
     KeyDimension skiDimension(rowLength, colLength);
 
-    std::vector<std::vector<int>> inputCopy(input.begin() + 1, input.end());
+    std::vector<std::vector<int>> skiMatrix(input.begin() + 1, input.end());
 
-    std::vector<int> columnValues(inputCopy[0].size(), 0);
-    std::vector<std::vector<int>> lengthMatrix(inputCopy.size(), columnValues);
-
-    // print input
-    printInput(inputCopy);
+    std::vector<NodeCtx> columnValues(skiMatrix[0].size(), NodeCtx());
+    std::vector<std::vector<NodeCtx>> pathCtxList(skiMatrix.size(), columnValues);
 
     int maxLength = 0;
-    std::vector<KeyDimension> nodes;
 
-    for (auto row = 0; row < inputCopy.size(); ++row)
+    std::vector<NodeCtx> nodes;
+
+    for (auto row = 0; row < skiMatrix.size(); ++row)
     {
-        for (auto col = 0; col < inputCopy[0].size(); ++col)
+        for (auto col = 0; col < skiMatrix[0].size(); ++col)
         {
-            KeyDimension currentPoint(row, col);
-            int tail = 0;
-            int currentNodeLength = setNodes(skiDimension, currentPoint, inputCopy, lengthMatrix);
-            if (maxLength < currentNodeLength)
+            KeyDimension currentNode(row, col);
+            if (pathCtxList[row][col].pathLength == 0)
             {
-                maxLength = currentNodeLength;
-                nodes.clear();
-                nodes.push_back(currentPoint);
-            }
-            else if (maxLength == currentNodeLength)
-            {
-                nodes.push_back(currentPoint);
+                NodeCtx currentNodeCtx = findNodePath(skiDimension, currentNode, skiMatrix, pathCtxList);
+                int currentNodeLength = currentNodeCtx.pathLength;
+                LOG(("LINE[%u]\t___ CURRENT PATH ROW[%u] COL[%u] DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", __LINE__, currentNode.row, currentNode.col, currentNodeCtx.data, currentNodeCtx.pathLength, currentNodeCtx.tail));
+
+                if (maxLength < currentNodeLength)
+                {
+                    maxLength = currentNodeLength;
+                    nodes.clear();
+                    nodes.push_back(currentNodeCtx);
+                }
+                else if (maxLength == currentNodeLength)
+                {
+                    nodes.push_back(currentNodeCtx);
+                }
             }
         }
     }
 
+
     for (auto i : nodes)
     {
-        LOG(("HEAD NODES: ROW[%u] COL[%u]\n", i.row, i.col, i));
+        LOG(("HEAD NODES: DATA[%u] PATH_LENGTH[%u] TAIL[%u]\n", i.data, i.pathLength, i.tail));
+        for (auto elem : i.vectorPath)
+        {
+            // Do something
+            LOG(("%u ", elem));
+
+        }
+        LOG(("\n"));
     }
 
     LOG(("LOGGGG\n"));
-    for (auto i : lengthMatrix)
+    for (auto i : pathCtxList)
     {
         for (auto j : i)
-            LOG(("%u ", j));
+            LOG(("%u ", j.pathLength));
         LOG(("\n"));
     }
     LOG(("\n"));
     LOG(("LOGGGG\n"));
+
+    LOG(("LAST PART__\n"));
+    int longestPath = nodes[0].data - nodes[0].tail;
+    LOG(("LONGEST PATH: %u", longestPath));
+    // for (auto node : nodes)
+    // {
+    //     LOG("HEAD: [%u]")
+    // }
 
     return input[0];
 }
