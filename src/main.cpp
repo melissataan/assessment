@@ -78,77 +78,21 @@ NodeCtx findNodePath(const KeyDimension& border,
     if (northNode.row >= 0)
     {
         processNeighborNode(border, northNode, northNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
-        // int neighborValue = inputList[northNode.row][northNode.col];
-        // if (neighborValue < currentNodeValue)
-        // {
-        //     isNoNeighborExist = false;
-        //     if (!pathList[northNode.row][northNode.col].isChecked)
-        //     {
-        //         northNodeCtx = findNodePath(border, northNode, inputList, pathList);
-        //     }
-        //     else
-        //     {
-        //         northNodeCtx = pathList[northNode.row][northNode.col];
-        //     }
-        //     northNodeCtx.pathLength += 1;
-        // }
     }
 
     if (eastNode.col < border.col)
     {
         processNeighborNode(border, eastNode, eastNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
-        // int neighborValue = inputList[eastNode.row][eastNode.col];
-        // if (neighborValue < currentNodeValue)
-        // {
-        //     isNoNeighborExist = false;
-        //     if (!pathList[eastNode.row][eastNode.col].isChecked)
-        //     {
-        //         eastNodeCtx = findNodePath(border, eastNode, inputList, pathList);
-        //     }
-        //     else
-        //     {
-        //         eastNodeCtx = pathList[eastNode.row][eastNode.col];
-        //     }
-        //     eastNodeCtx.pathLength += 1;
-        // }
     }
 
     if (southNode.row < border.row)
     {
         processNeighborNode(border, southNode, southNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
-        // int neighborValue = inputList[southNode.row][southNode.col];
-        // if (neighborValue < currentNodeValue)
-        // {
-        //     isNoNeighborExist = false;
-        //     if (!pathList[southNode.row][southNode.col].isChecked)
-        //     {
-        //         southNodeCtx = findNodePath(border, southNode, inputList, pathList);
-        //     }
-        //     else
-        //     {
-        //         southNodeCtx = pathList[southNode.row][southNode.col];
-        //     }
-        //     southNodeCtx.pathLength += 1;
-        // }
     }
 
     if (westNode.col >= 0)
     {
         processNeighborNode(border, westNode, westNodeCtx, inputList, pathList, currentNodeValue, isNoNeighborExist);
-        // int neighborValue = inputList[westNode.row][westNode.col];
-        // if (neighborValue < currentNodeValue)
-        // {
-        //     isNoNeighborExist = false;
-        //     if (!pathList[westNode.row][westNode.col].isChecked)
-        //     {
-        //         westNodeCtx = findNodePath(border, westNode, inputList, pathList);
-        //     }
-        //     else
-        //     {
-        //         westNodeCtx = pathList[westNode.row][westNode.col];
-        //     }
-        //     westNodeCtx.pathLength += 1;
-        // }
     }
 
     if (isNoNeighborExist)
@@ -197,34 +141,18 @@ NodeCtx findNodePath(const KeyDimension& border,
         if (min_tail == northNodeCtx.tail && maxLength == northNodeCtx.pathLength)
         {
             storeContext(northNodeCtx);
-            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), northNodeCtx.vectorPath.begin(), northNodeCtx.vectorPath.end());
-            // currentNodeCtx.tail = northNodeCtx.tail;
-            // currentNodeCtx.data = currentNodeValue;
-            // currentNodeCtx.pathLength = northNodeCtx.pathLength;
         }
         else if (min_tail == eastNodeCtx.tail && maxLength == eastNodeCtx.pathLength)
         {
             storeContext(eastNodeCtx);
-            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), eastNodeCtx.vectorPath.begin(), eastNodeCtx.vectorPath.end());
-            // currentNodeCtx.tail = eastNodeCtx.tail;
-            // currentNodeCtx.data = currentNodeValue;
-            // currentNodeCtx.pathLength = eastNodeCtx.pathLength;
         }
         else if (min_tail == southNodeCtx.tail && maxLength == southNodeCtx.pathLength)
         {
             storeContext(southNodeCtx);
-            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), southNodeCtx.vectorPath.begin(), southNodeCtx.vectorPath.end());
-            // currentNodeCtx.tail = southNodeCtx.tail;
-            // currentNodeCtx.data = currentNodeValue;
-            // currentNodeCtx.pathLength = southNodeCtx.pathLength;
         }
         else if (min_tail == westNodeCtx.tail && maxLength == westNodeCtx.pathLength)
         {
             storeContext(westNodeCtx);
-            // currentNodeCtx.vectorPath.insert(currentNodeCtx.vectorPath.end(), westNodeCtx.vectorPath.begin(), westNodeCtx.vectorPath.end());
-            // currentNodeCtx.tail = westNodeCtx.tail;
-            // currentNodeCtx.data = currentNodeValue;
-            // currentNodeCtx.pathLength = westNodeCtx.pathLength;
         }
     }
 
