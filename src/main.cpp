@@ -10,6 +10,7 @@ struct NodeCtx
     int data = 0;
     int pathLength = 0;
     int tail = 0;
+    bool isChecked = false;
     std::vector<int> vectorPath;
 
     NodeCtx& operator=(NodeCtx node)
@@ -41,6 +42,7 @@ NodeCtx findNodePath(const KeyDimension& border,
     NodeCtx& currentNodeCtx = pathList[currentNode.row][currentNode.col];
     int currentNodeValue = inputList[currentNode.row][currentNode.col];
     currentNodeCtx.vectorPath.push_back(currentNodeValue);
+    currentNodeCtx.isChecked = true;
 
     if (northNode.row >= 0)
     {
@@ -48,7 +50,7 @@ NodeCtx findNodePath(const KeyDimension& border,
         if (neighborValue < currentNodeValue)
         {
             isNoNeighborExist = false;
-            if (pathList[northNode.row][northNode.col].pathLength == 0)
+            if (!pathList[northNode.row][northNode.col].isChecked)
             {
                 northNodeCtx = findNodePath(border, northNode, inputList, pathList);
             }
@@ -68,7 +70,7 @@ NodeCtx findNodePath(const KeyDimension& border,
         if (neighborValue < currentNodeValue)
         {
             isNoNeighborExist = false;
-            if (pathList[eastNode.row][eastNode.col].pathLength == 0)
+            if (!pathList[eastNode.row][eastNode.col].isChecked)
             {
                 eastNodeCtx = findNodePath(border, eastNode, inputList, pathList);
             }
@@ -88,7 +90,7 @@ NodeCtx findNodePath(const KeyDimension& border,
         if (neighborValue < currentNodeValue)
         {
             isNoNeighborExist = false;
-            if (pathList[southNode.row][southNode.col].pathLength == 0)
+            if (!pathList[southNode.row][southNode.col].isChecked)
             {
                 southNodeCtx = findNodePath(border, southNode, inputList, pathList);
             }
@@ -108,7 +110,7 @@ NodeCtx findNodePath(const KeyDimension& border,
         if (neighborValue < currentNodeValue)
         {
             isNoNeighborExist = false;
-            if (pathList[westNode.row][westNode.col].pathLength == 0)
+            if (!pathList[westNode.row][westNode.col].isChecked)
             {
                 westNodeCtx = findNodePath(border, westNode, inputList, pathList);
             }
@@ -221,7 +223,7 @@ std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
         for (auto col = 0; col < skiMatrix[0].size(); ++col)
         {
             KeyDimension currentNode(row, col);
-            if (pathCtxList[row][col].pathLength == 0)
+            if (!pathCtxList[row][col].isChecked)
             {
                 NodeCtx currentNodeCtx = findNodePath(skiDimension, currentNode, skiMatrix, pathCtxList);
                 int currentNodeLength = currentNodeCtx.pathLength;
@@ -266,13 +268,25 @@ std::vector<int> findLongestSki(const std::vector<std::vector<int>>& input)
 
     LOG(("LAST PART__\n"));
     int longestPath = nodes[0].data - nodes[0].tail;
-    LOG(("LONGEST PATH: %u", longestPath));
-    // for (auto node : nodes)
-    // {
-    //     LOG("HEAD: [%u]")
-    // }
+    auto longestSkiNode = nodes[0].vectorPath;
+    for (auto node : nodes)
+    {
+        int tmpPathLength = node.data - node.tail;
+        if (tmpPathLength > longestPath)
+        {
+            longestSkiNode = node.vectorPath;
+            longestPath = tmpPathLength;
+        }
+    }
 
-    return input[0];
+    LOG(("LONGEST PATH IS: \n"));
+    for (auto i : longestSkiNode)
+    {
+        LOG(("%u ", i));
+    }
+    LOG(("\n"));
+
+    return longestSkiNode;
 }
 
 int main()
